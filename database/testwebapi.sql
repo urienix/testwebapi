@@ -201,11 +201,12 @@ BEGIN
 END
 go
 
-CREATE PROCEDURE SP_OBTENER_VACUNA_COVID19
+CREATE PROCEDURE SP_OBTENER_VACUNA_COVID19BYID
     @VacunacionId INT
 AS
 BEGIN
-    SELECT * FROM Vacunacion_Covid19 WHERE VacunacionId = @VacunacionId
+    SELECT * FROM Vacunacion_Covid19 
+    WHERE VC.VacunacionId = @VacunacionId
 END
 go
 
@@ -233,7 +234,7 @@ go
 CREATE PROCEDURE SP_OBTENER_TODOS_VACUNAS_COVID19
 AS
 BEGIN
-    SELECT * FROM Vacunacion_Covid19
+    SELECT * FROM Vacunacion_Covid19 VC INNER JOIN Pacientes P ON VC.PacienteId = P.PacienteId INNER JOIN Vacunas V ON VC.VacunaId = V.VacunaId INNER JOIN Dosis D ON VC.DosisId = D.DosisVacunaId
 END
 go
 
@@ -241,9 +242,28 @@ CREATE PROCEDURE SP_OBTENER_TODOS_VACUNAS_COVID19_POR_PACIENTE
     @PacienteId INT
 AS
 BEGIN
-    SELECT * FROM Vacunacion_Covid19 WHERE PacienteId = @PacienteId
+    SELECT * FROM Vacunacion_Covid19 
 END
 
+
+-- PROCEDIMIENTOS DE VACUNACION
+CREATE PROCEDURE SP_VACUNAR_PACIENTE
+    @PacienteId INT,
+    @VacunaId INT,
+    @DosisId INT
+AS
+BEGIN
+    DECLARE @VacunacionId INT
+    SET @VacunacionId = (SELECT VacunacionId FROM Vacunacion_Covid19 WHERE PacienteId = @PacienteId)
+    IF @VacunacionId IS NULL
+        BEGIN
+            EXEC SP_NUEVA_VACUNA_COVID19 @PacienteId, @VacunaId, @DosisId
+        END
+    ELSE
+        BEGIN
+            EXEC SP_ACTUALIZAR_VACUNA_COVID19 @VacunacionId, @PacienteId, @VacunaId, @DosisId
+        END
+END
 
 
 -- DATOS PRECARGADOS
